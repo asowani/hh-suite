@@ -104,7 +104,11 @@ void Viterbi::AlignWithOutCellOff(HMMSimd* q, HMMSimd* t,ViterbiMatrix * viterbi
                                                            -1, -1, -1,  -1,  0,  4,  8, 12, -1, -1, -1, -1, -1, -1, -1, -1);
 #endif
 #ifdef VITERBI_CELLOFF
+#ifdef ALTIVEC
+    const vector int tmp_vec     = _mm_set_epi32(0x40000000,0x00400000,0x00004000,0x00000040);//01000000010000000100000001000000
+#else
     const __m128i tmp_vec        = _mm_set_epi32(0x40000000,0x00400000,0x00004000,0x00000040);//01000000010000000100000001000000
+#endif /* ALTIVEC */
 #ifdef AVX2
     const simd_int co_vec               = _mm256_inserti128_si256(_mm256_castsi128_si256(tmp_vec), tmp_vec, 1);
     const simd_int float_min_vec     = (simd_int) _mm256_set1_ps(-FLT_MAX);

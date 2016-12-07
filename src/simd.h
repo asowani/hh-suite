@@ -24,6 +24,17 @@
 #define SSE
 #endif
 
+/* ------------------------------ PPC64LE ----------------------------------- */
+#ifdef ALTIVEC
+#define VMX
+#define VSX
+#undef AVX512
+#undef AVX2
+#undef AVX
+#undef SSE
+#endif
+/* ------------------------------ PPC64LE ----------------------------------- */
+
 #ifdef AVX512
 #include <zmmintrin.h.h> // AVX512
 // double support
@@ -125,6 +136,7 @@ typedef __m512i simd_int;
 // integer support  (usable with AVX2)
 #ifndef SIMD_INT
 #define SIMD_INT
+
 #include <immintrin.h> // AVX
 #define ALIGN_INT   32
 #define VECSIZE_INT 8
@@ -324,6 +336,168 @@ typedef __m128i simd_int;
 #endif //SIMD_INT
 #endif //SSE
 
+/* ------------------------------ PPC64LE ----------------------------------- */
+#ifdef ALTIVEC
+#include <altivec.h>
+
+/* float support */
+#ifndef SIMD_FLOAT
+#define SIMD_FLOAT
+#define ALIGN_FLOAT     16
+#define VECSIZE_FLOAT   4
+typedef vector float  simd_float;
+
+#define simdf32_xor(x,y)    vec_xor(x,y)  /* _mm_xor_ps(x,y) */
+#define simdf32_and(x,y)    vec_and(x,y)  /* _mm_and_ps(x,y) */
+#define simdf32_sub(x,y)    vec_sub(x,y)  /* _mm_sub_ps(x,y) */
+#define simdf32_add(x,y)    vec_add(x,y)  /* _mm_add_ps(x,y) */
+#define simdf32_mul(x,y)    vec_mul(x,y)  /* _mm_mul_ps(x,y) */
+#define simdf32_or(x,y)     vec_or(x,y)   /* _mm_or_ps(x,y) */
+#define simdf32_max(x,y)    vec_max(x,y)  /* _mm_max_ps(x,y) */
+#define simdf32_min(x,y)    vec_min(x,y)  /* _mm_min_ps(x,y) */
+#define simdf32_load(x)     vec_ld(0, x)  /* _mm_load_ps(x) */
+#define simdf32_store(x,y)  vec_st(y,0,x) /* _mm_store_ps(x,y) */
+#define simdf32_rcp(x)      vec_re(x)     /* _mm_rcp_ps(x) */
+#define simdf_f2icast(x)    vec_cts(x,0)  /* _mm_castps_si128(x) */ // compile time cast
+#define simdf32_f2i(x)      vec_cts(x,0)  /* _mm_cvtps_epi32(x) */ // convert s.p. float to integer
+#define simdf32_set(x)      vec_splats((float)x)  /* _mm_set1_ps(x) */
+
+#define _mm_store_ss(p,x)   vec_ste(x,0,p)
+
+/*#define simdf32_gt(x,y)     vec_cmpgt(x,y)*/
+/*#define simdf32_gt(x,y)     _mm_cmpgt_ps(x,y) */
+inline vector float simdf32_gt (vector float x, vector float y)
+{
+  vector float v;
+  v[0] = (x[0] > y[0]) ? 0xffffffff : 0x0;
+  v[1] = (x[1] > y[1]) ? 0xffffffff : 0x0;
+  v[2] = (x[2] > y[2]) ? 0xffffffff : 0x0;
+  v[3] = (x[3] > y[3]) ? 0xffffffff : 0x0;
+  return (v);
+}
+#endif /* SIMD_FLOAT */
+
+/* integer support */
+#ifndef SIMD_INT
+#define SIMD_INT
+#define ALIGN_INT       16
+#define VECSIZE_INT     4
+typedef vector int simd_int;
+
+#define simdi_and(x,y)        vec_and(x,y)      /* _mm_and_si128(x,y) */
+#define simdi_or(x,y)         vec_or(x,y)       /* _mm_or_si128(x,y) */
+#define simdi_xor(x,y)        vec_xor(x,y)      /* _mm_xor_si128(x,y) */
+#define simdui8_adds(x,y)     vec_adds(x,y)     /* _mm_adds_epu8(x,y) */
+#define simdui8_subs(x,y)     vec_subs(x,y)     /* _mm_subs_epu8(x,y) */
+#define simdi32_gt(x,y)       vec_cmpgt(x,y)    /* _mm_cmpgt_epi32(x,y) */
+#define simdi8_gt(x,y)        vec_cmpgt(x,y)    /* _mm_cmpgt_epi8(x,y) */
+#define simdi8_eq(x,y)        vec_cmpeq(x,y)    /* _mm_cmpeq_epi8(x,y) */
+#define simdi8_set(x)         vec_splats((int)x)     /* _mm_set1_epi8(x) */
+#define simdi32_set(x)        vec_splats(x)     /* _mm_set1_epi32(x) */
+#define simdi32_add(x,y)      vec_add(x,y)      /* _mm_add_epi32(x,y) */
+#define simdi32_sub(x,y)      vec_sub(x,y)      /* _mm_sub_epi32(x,y) */
+#define simdi_i2fcast(x)      vec_ctf(x, 0)     /* _mm_castsi128_ps(x) */
+#define simdi_store(x,y)      vec_st(y,0,x)     /* _mm_store_si128(x,y) */
+#define simdi_load(x)         vec_ld(0, x)      /* _mm_load_si128(x) */
+#define simdui8_max(x,y)      vec_max(x,y)      /* _mm_max_epu8(x,y) */
+#define simdi_setzero(x)      vec_splats(0)     /* _mm_setzero_si128() */
+#define _mm_packs_epi32(a,b)  vec_packs(a,b)
+#define _mm_packus_epi16(a,b) vec_packsu(a,b)
+
+/* #define simdi8_shiftl(x,y)  _mm_slli_si128(x,y) */
+inline vector char simdi8_shiftl (vector char a, int imm5)
+{
+    __vector char result;
+    const __vector unsigned char VEC_ZERO = {0x00, 0x00, 0x00, 0x00,
+                                             0x00, 0x00, 0x00, 0x00,
+                                             0x00, 0x00, 0x00, 0x00,
+                                             0x00, 0x00, 0x00, 0x00};
+    result = vec_sld (a, VEC_ZERO, imm5);
+    return (result);
+}
+
+/* #define simdi32_slli(x,y)   _mm_slli_epi32(x,y) // shift integers in a left by y */
+inline vector char simdi32_slli (vector char a, int imm5)
+{
+    __vector char result;
+    const __vector unsigned char VEC_ZERO = {0x00, 0x00, 0x00, 0x00,
+                                             0x00, 0x00, 0x00, 0x00,
+                                             0x00, 0x00, 0x00, 0x00,
+                                             0x00, 0x00, 0x00, 0x00};
+    result = vec_sld (a, VEC_ZERO, imm5);
+    return (result);
+}
+
+/* #define simdi32_i2f(x) _mm_cvtepi32_ps(x)  // convert integer to s.p. float */
+inline vector float simdi32_i2f (vector int x)
+{
+  vector float vec_out;
+  HH_LOG(INFO) << "ATUL: in simdi32_i2f" << std::endl;
+  asm ("xvcvsxwsp %x0, %x1" : "=wa" (vec_out): "wa" (x));
+  return (vec_out);
+}
+
+/* #define simdi32_srli(x,y) _mm_srli_epi32(x,y) // shift integers in a right by y */
+inline vector int simdi32_srli (vector int x, int y)
+{
+  vector int si;
+  HH_LOG(INFO) << "ATUL: in simdi32_srli" << std::endl;
+  si[0] = x[0] >> y;
+  si[1] = x[1] >> y;
+  si[2] = x[2] >> y;
+  si[3] = x[3] >> y;
+  return (si);
+}
+
+/* #define simdi8_movemask(x)  _mm_movemask_epi8(x) */
+//inline int simdi8_movemask (vector int x)
+inline int simdi8_movemask (vector char x)
+{
+  int r;
+  r = (x[15] && 0x80) << 15 |
+      (x[14] && 0x80) << 15 |
+      (x[13] && 0x80) << 15 |
+      (x[12] && 0x80) << 15 |
+      (x[11] && 0x80) << 15 |
+      (x[10] && 0x80) << 15 |
+      (x[9] && 0x80) << 15 |
+      (x[8] && 0x80) << 15 |
+      (x[7] && 0x80) << 15 |
+      (x[6] && 0x80) << 15 |
+      (x[5] && 0x80) << 15 |
+      (x[4] && 0x80) << 15 |
+      (x[3] && 0x80) << 15 |
+      (x[2] && 0x80) << 15 |
+      (x[1] && 0x80) << 15 |
+      (x[0] && 0x80) << 15;
+  return (r);
+}
+
+inline int _mm_cvtsi128_si32 (vector int a)
+{
+  return (a[0]);
+}
+
+/* #define simdi_andnot(x,y)   _mm_andnot_si128(x,y) */
+inline vector int simdi_andnot (vector int x, vector int y)
+{
+  vector int i;
+  i[0] = ~x[0] & y[0];
+  i[1] = ~x[1] & y[1];
+  i[2] = ~x[2] & y[2];
+  i[3] = ~x[3] & y[3];
+  return (i);
+}
+
+inline vector int _mm_set_epi32 (int i3, int i2, int i1, int i0)
+{
+  vector int i;
+  i[0] = i0; i[1] = i1; i[2] = i2; i[3] = i3;
+  return (i);
+}
+#endif /* SIMD_INT */
+#endif /* ALTIVEC */
+/* ------------------------------ PPC64LE ----------------------------------- */
 
 /* horizontal max */
 template <typename F>

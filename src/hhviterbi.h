@@ -123,26 +123,46 @@ class Viterbi {
 
 
     static inline simd_float ScalarProd20Vec(simd_float* qi, simd_float* tj) {
+#ifdef ALTIVEC
+      __builtin_prefetch ((char *) &qi[4], 0);
+      __builtin_prefetch ((char *) &tj[4], 0);
+#else
       _mm_prefetch((char * ) &qi[4], _MM_HINT_T0);
       _mm_prefetch((char * ) &tj[4], _MM_HINT_T0);
+#endif
       simd_float res0 = simdf32_mul(tj[0], qi[0]);
       simd_float res1 = simdf32_mul(tj[1], qi[1]);
       simd_float res2 = simdf32_mul(tj[2], qi[2]);
       simd_float res3 = simdf32_mul(tj[3], qi[3]);
+#ifdef ALTIVEC
+      __builtin_prefetch ((char *) &qi[8], 0);
+      __builtin_prefetch ((char *) &tj[8], 0);
+#else
       _mm_prefetch((char * ) &qi[8], _MM_HINT_T0);
       _mm_prefetch((char * ) &tj[8], _MM_HINT_T0);
+#endif
       res0 = simdf32_add(simdf32_mul(tj[ 4],qi[ 4]), res0);
       res1 = simdf32_add(simdf32_mul(tj[ 5],qi[ 5]), res1);
       res2 = simdf32_add(simdf32_mul(tj[ 6],qi[ 6]), res2);
       res3 = simdf32_add(simdf32_mul(tj[ 7],qi[ 7]), res3);
+#ifdef ALTIVEC
+      __builtin_prefetch ((char * ) &qi[12], 0);
+      __builtin_prefetch ((char * ) &tj[12], 0);
+#else
       _mm_prefetch((char * ) &qi[12], _MM_HINT_T0);
       _mm_prefetch((char * ) &tj[12], _MM_HINT_T0);
+#endif
       res0 = simdf32_add(simdf32_mul(tj[ 8],qi[ 8]), res0);
       res1 = simdf32_add(simdf32_mul(tj[ 9],qi[ 9]), res1);
       res2 = simdf32_add(simdf32_mul(tj[10],qi[10]), res2);
       res3 = simdf32_add(simdf32_mul(tj[11],qi[11]), res3);
+#ifdef ALTIVEC
+      __builtin_prefetch ((char * ) &qi[16], 0);
+      __builtin_prefetch ((char * ) &tj[16], 0);
+#else
       _mm_prefetch((char * ) &qi[16], _MM_HINT_T0);
       _mm_prefetch((char * ) &tj[16], _MM_HINT_T0);
+#endif
       res0 = simdf32_add(simdf32_mul(tj[12],qi[12]), res0);
       res1 = simdf32_add(simdf32_mul(tj[13],qi[13]), res1);
       res2 = simdf32_add(simdf32_mul(tj[14],qi[14]), res2);

@@ -5,7 +5,9 @@
 #include "hhhmm.h"
 #include "simd.h"
 
+#ifndef ALTIVEC
 #include <emmintrin.h>
+#endif
 
 
 class HMMSimd
